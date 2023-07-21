@@ -1,0 +1,9 @@
+aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/b1w3s4i0
+
+docker build -t nicolasvalde/nodek8 .
+
+docker tag nicolasvalde/nodek8:latest public.ecr.aws/b1w3s4i0/nicolasvalde/nodek8:latest
+
+docker push public.ecr.aws/b1w3s4i0/nicolasvalde/nodek8:latest
+
+
