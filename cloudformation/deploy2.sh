@@ -1,0 +1,1 @@
+aws cloudformation deploy --template-file eks2.yml --capabilities CAPABILITY_NAMED_IAM --stack-name "$STACK_NAME" --region $REGION --parameter-overrides EKSIAMRoleName="$STACK_NAME-Role" EKSClusterName="$STACK_NAME" 
