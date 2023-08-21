@@ -242,87 +242,88 @@ Resources:
   WorkerNodeGroup:
     Type: AWS::EKS::Nodegroup
     Properties:
-      AmiType: !Ref WorkerNodesInstanceType
-      CapacityType: String
-      ClusterName: String
-      DiskSize: Integer
-      ForceUpdateEnabled: Boolean
-      InstanceTypes:
-        - String
-      Labels:
-        Key: Value
-      LaunchTemplate: LaunchTemplateSpecification
-      NodegroupName: String
-      NodeRole: String
-      ReleaseVersion: String
-      RemoteAccess: RemoteAccess
-      ScalingConfig: ScalingConfig
+      # AmiType: !Ref WorkerNodesInstanceType #! acá me está dando error
+      # CapacityType: String
+      ClusterName: !Ref ControlPlane
+      # DiskSize: Integer
+      # ForceUpdateEnabled: Boolean
+      # InstanceTypes:
+      #   - String
+      # Labels:
+      #   Key: Value
+      # LaunchTemplate: LaunchTemplateSpecification
+      # NodegroupName: String
+      NodeRole: !GetAtt WorkerNodesRole.Arn
+      # ReleaseVersion: String
+      # RemoteAccess: RemoteAccess
+      # ScalingConfig: ScalingConfig
       Subnets:
-        - String
-      Tags:
-        Key: Value
-      Taints:
-        - Taint
-      UpdateConfig: UpdateConfig
-      Version: String
+        - !Ref Subnet1
+        - !Ref Subnet2
+      # Tags:
+      #   Key: Value
+      # Taints:
+      #   - Taint
+      # UpdateConfig: UpdateConfig
+      # Version: String
 
   #!============================================================================#
   # ! Worker nodes (auto-scaling group) ESTO ME PARECE QUE SE TIENE QUE BORRAR
   #!============================================================================#
 
-  WorkerNodesAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: 1
-        MaxBatchSize: 1
-    Properties:
-      LaunchConfigurationName: !Ref WorkerNodesLaunchConfiguration
-      MinSize: !Ref NumWorkerNodes
-      MaxSize: !Ref NumWorkerNodes
-      VPCZoneIdentifier:
-        - !Ref Subnet1
-        - !Ref Subnet2
-      Tags:
-        - Key: Name
-          Value: !Sub "${AWS::StackName}-WorkerNodesAutoScalingGroup"
-          PropagateAtLaunch: true
-        # Without this tag, worker nodes are unable to join the cluster:
-        - Key: !Sub "kubernetes.io/cluster/${ControlPlane}"
-          Value: "owned"
-          PropagateAtLaunch: true
+  # WorkerNodesAutoScalingGroup:
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   UpdatePolicy:
+  #     AutoScalingRollingUpdate:
+  #       MinInstancesInService: 1
+  #       MaxBatchSize: 1
+  #   Properties:
+  #     LaunchConfigurationName: !Ref WorkerNodesLaunchConfiguration
+  #     MinSize: !Ref NumWorkerNodes
+  #     MaxSize: !Ref NumWorkerNodes
+  #     VPCZoneIdentifier:
+  #       - !Ref Subnet1
+  #       - !Ref Subnet2
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub "${AWS::StackName}-WorkerNodesAutoScalingGroup"
+  #         PropagateAtLaunch: true
+  #       # Without this tag, worker nodes are unable to join the cluster:
+  #       - Key: !Sub "kubernetes.io/cluster/${ControlPlane}"
+  #         Value: "owned"
+  #         PropagateAtLaunch: true
 
-  WorkerNodesLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    # Wait until cluster is ready before launching worker nodes
-    DependsOn: ControlPlane
-    Properties:
-      AssociatePublicIpAddress: true
-      IamInstanceProfile: !Ref WorkerNodesInstanceProfile
-      ImageId: !FindInMap
-        - EksAmiIds
-        - !Ref AWS::Region
-        - Standard
-      InstanceType: !Ref WorkerNodesInstanceType
-      KeyName: !Ref KeyPairName
-      SecurityGroups:
-        - !Ref WorkerNodesSecurityGroup
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          set -o xtrace
-          /etc/eks/bootstrap.sh ${ControlPlane}
-          /opt/aws/bin/cfn-signal \
-                          --exit-code $? \
-                          --stack  ${AWS::StackName} \
-                          --resource NodeGroup  \
-                          --region ${AWS::Region}
+  # WorkerNodesLaunchConfiguration:
+  #   Type: AWS::AutoScaling::LaunchConfiguration
+  #   # Wait until cluster is ready before launching worker nodes
+  #   DependsOn: ControlPlane
+  #   Properties:
+  #     AssociatePublicIpAddress: true
+  #     IamInstanceProfile: !Ref WorkerNodesInstanceProfile
+  #     ImageId: !FindInMap
+  #       - EksAmiIds
+  #       - !Ref AWS::Region
+  #       - Standard
+  #     InstanceType: !Ref WorkerNodesInstanceType
+  #     KeyName: !Ref KeyPairName
+  #     SecurityGroups:
+  #       - !Ref WorkerNodesSecurityGroup
+  #     UserData:
+  #       Fn::Base64: !Sub |
+  #         #!/bin/bash
+  #         set -o xtrace
+  #         /etc/eks/bootstrap.sh ${ControlPlane}
+  #         /opt/aws/bin/cfn-signal \
+  #                         --exit-code $? \
+  #                         --stack  ${AWS::StackName} \
+  #                         --resource NodeGroup  \
+  #                         --region ${AWS::Region}
 
-  WorkerNodesInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - !Ref WorkerNodesRole
+  # WorkerNodesInstanceProfile:
+  #   Type: AWS::IAM::InstanceProfile
+  #   Properties:
+  #     Roles:
+  #       - !Ref WorkerNodesRole
 
   WorkerNodesRole:
     Type: AWS::IAM::Role

@@ -18,14 +18,13 @@ NOC='\033[0m'
 echo -e  "$COL> Deploying CloudFormation stack (may take up to 15 minutes)...$NOC"
 aws cloudformation deploy \
   "$@" \
-  --template-file eks.yml \
+  --template-file eks2.yml \
   --capabilities CAPABILITY_IAM \
   --stack-name "$STACK_NAME" \
   --region $REGION \
   --parameter-overrides \
-      KeyPairName="$KEY_PAIR_NAME" \
-      NumWorkerNodes="$NUM_WORKER_NODES" \
-      WorkerNodesInstanceType="$WORKER_NODES_INSTANCE_TYPE"
+      EKSIAMRoleName="$STACK_NAME-Role" \
+      EKSClusterName="$STACK_NAME" 
 
 echo -e "\n$COL> Updating kubeconfig file...$NOC"
 aws eks update-kubeconfig "$@" --name "$STACK_NAME" 
